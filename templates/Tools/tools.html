@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Konsa College Data Portal</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<link rel="icon" href="{{ url_for('static', filename='images/KonsaCollege_Logo.svg') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+	<link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+	<style>
+		.hide {
+			visibility: collapse;
+			transform: scale(0.5);
+		}
+		div .mb-3 {
+		    padding: 1rem;
+		    border: 2px solid lightgray;
+		    border-radius: 1rem;
+		}
+		div.mb-3:hover {
+			border: 2px dotted lightgray;
+		}
+		label {
+			font-size: 1.3rem;
+		}
+	</style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Manage Tools</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
+    </nav>
+
+	{% if username == "admin" and password == "kcadmin123" %}
+    <div class="container">
+        <h2>Manage Tools</h2>
+
+		<form action="/tools" method="POST">
+
+
+            <div class="mb-3">
+                <label for="tool_heading" class="form-label">Tool Heading</label>
+                <input type="text" class="form-control" name="tool_heading" id="tool_heading" placeholder="Enter tool heading Eg: JAC Rank Predictor">
+			</div>
+
+			<div class="mb-3">
+				<label for="tool_route" class="form-label">Tool Route</label>
+				<input type="text" class="form-control" name="tool_route" id="tool_route" placeholder="Enter tool /route">
+			</div>
+
+			<div class="mb-3">
+				<label for="tool_sub_heading" class="form-label">Tool Sub Heading</label>
+				<input type="text" class="form-control" name="tool_sub_heading" id="tool_sub_heading" placeholder="Enter subheading">
+			</div>
+
+			<div class="mb-3">
+				<label for="tool_icon_link" class="form-label">Tool Icon Link</label>
+				<input type="text" class="form-control" name="tool_icon_link" id="tool_icon_link"
+					placeholder="Put the link for the background banner photo." oninput="$(this).siblings('img').attr('src', $(this).val())">
+				<img class="mt-2" style=" width: 500px; height: 500px; border: 1px solid grey; object-fit: contain; background: lightgrey; " src="{{ url_for('static', filename='images/homepage_banner.svg') }}" alt="Header Image Link you've added is either broken or blank.">
+				<h3>Image Ratio - <strong>1 : 1</strong></h3>
+			</div>
+
+			<div class="mb-3">
+				<div class="p-2 form-check form-check-inline custom-control custom-checkbox">
+					<input type="checkbox" class="custom-control-input m-2 form-check-input" name="published" id="published" checked>
+					<label class="custom-control-label" for="published">Publish</label>
+				</div>
+			</div>
+
+			<div class="mb-3">
+				<label class="form-check-label">Payment Status</label>
+				<div class="input-group">
+					<label class="form-check-label" for="payment_status_amount"></label>
+					<input required type="number" name="payment_status_amount" id="payment_status_amount" class="form-control m-input border-0" placeholder="Enter amount. Deafult = Rs. 1000/-" autocomplete="off" value="1000">
+					<div class="p-1 form-check form-check-inline custom-control custom-checkbox">
+				        <input type="checkbox" class="custom-control-input m-2 form-check-input" id="payment_status_paid" name="payment_status_paid">
+				        <label class="custom-control-label" for="payment_status_paid">Paid</label>
+				    </div>
+				</div>
+			</div>
+
+            <button type="submit" class="btn btn-success btn btn-primary">Submit</button>
+        </form>
+    </div>
+
+	<div class="container mb-7 mt-3">
+		<!-- Nav tabs -->
+		<ul class="nav nav-tabs" role="tablist">
+		    <li class="nav-item">
+		        <a class="nav-link d-flex active" data-bs-toggle="tab" href="#draftToolsTab" role="tab">
+		            <span><i class="bi bi-house-x-fill"></i>
+		            </span>
+		            <span class="d-none d-md-block ms-2">Draft Tools</span>
+		        </a>
+		    </li>
+		    <li class="nav-item">
+		        <a class="nav-link d-flex" data-bs-toggle="tab" href="#approvedToolsTab" role="tab">
+		            <span><i class="bi bi-house-check"></i>
+		            </span>
+		            <span class="d-none d-md-block ms-2">Approved Tools</span>
+		        </a>
+		    </li>
+		</ul>
+		<!-- Tab panes -->
+		<div class="tab-content">
+		    <div class="tab-pane active" id="draftToolsTab" role="tabpanel">
+				<h1>Unpublished Tools</h1>
+				{% if all_tools|length==0 %}
+				<div class="alert alert-dark" role="alert">
+					No Unpublished Tools !!!
+				</div>
+				{% else %}
+		        <table class="table" id="draftTable">
+		            <thead>
+						<tr>
+				            <th>S.No.</th>
+				            <th>Tool</th>
+				            <th>Actions</th>
+				            <th>Status</th>
+				        </tr>
+		            </thead>
+		            <tbody>
+		                {% for tool in all_tools %}
+			                {% if tool.published == false %}
+			                <tr>
+			                    <td scope="row"><strong>{{loop.index}}</strong></td>
+			                    <td scope="row"><img width="auto" height="20px" src="{{tool.toolIconLink}}" alt="Icon for {{tool.toolHeading}}">&emsp;{{tool.toolHeading}}</td>
+			                    <td>
+									<a title="Delete" href="/delete_admin_tools/{{tool.sno}}" type="button" class="btn btn-danger btn-sm mx-1" onclick="return confirm('Are you sure you want to delete this item? This would permanently delete this data. Be careful little sunshine!')"><i class="bi bi-trash"></i></a>
+									<a href="/update_tools/{{tool.sno}}" type="button" class="btn btn-info btn-sm mx-1" title="Update"><i class="bi bi-pencil"></i></a>
+									<a title="Preview" href="https://konsa-college-website.vercel.app/tools{{tool.toolRoute}}" class="btn btn-info btn-sm mx-1"><i class="bi bi-eye-fill"></i></a>
+									<a href="/publish_tool/{{tool.sno}}" title="Publish" class="btn btn-info btn-sm mx-1"><i class="bi bi-plus-circle"></i></a>
+			                    </td>
+								{% if tool.paymentStatus.paid == true %}
+								<td scope="row">Paid Tool</td>
+								{% else %}
+								<td scope="row">Unpaid Tool</td>
+								{% endif %}
+			                </tr>
+			                {% endif %}
+		                {% endfor %}
+		            </tbody>
+		        </table>
+				{% endif %}
+		    </div>
+
+			<div class="tab-pane" id="approvedToolsTab" role="tabpanel">
+				<h1>Published Tools</h1>
+				{% if all_tools|length==0 %}
+				<div class="alert alert-dark" role="alert">
+					No Published Tools !!!
+				</div>
+				{% else %}
+				<table class="table" id="approvedTable">
+					<thead>
+						<tr>
+							<th>S.No.</th>
+							<th>Name</th>
+							<th>Actions</th>
+							<th>Status</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for tool in all_tools %}
+			                {% if tool.published == true %}
+			                <tr>
+								<td scope="row"><strong>{{loop.index}}</strong></td>
+			                    <td scope="row"><img width="auto" height="20px" src="{{tool.toolIconLink}}" alt="/{{tool.toolRoute}}">&emsp;{{tool.toolHeading}}</td>
+			                    <td>
+									<a title="Delete" href="/delete_admin_tools/{{tool.sno}}" type="button" class="btn btn-danger btn-sm mx-1" onclick="return confirm('Are you sure you want to delete this item? This would permanently delete this data. Be careful little sunshine!')"><i class="bi bi-trash"></i></a>
+									<a href="/update_tools/{{tool.sno}}" type="button" class="btn btn-info btn-sm mx-1" title="Update"><i class="bi bi-pencil"></i></a>
+									<a title="Preview" href="https://konsa-college-website.vercel.app/tools{{tool.toolRoute}}" class="btn btn-info btn-sm mx-1"><i class="bi bi-eye-fill"></i></a>
+									<a title="Un-Publish" href="/unpublish_tool/{{tool.sno}}" class="btn btn-info btn-sm mx-1"><i class="bi bi-dash-circle"></i></a>
+								</td>
+								{% if tool.paymentStatus.paid == true %}
+								<td scope="row">Paid Tool</td>
+								{% else %}
+								<td scope="row">Unpaid Tool</td>
+								{% endif %}
+							</tr>
+							{% endif %}
+						{% endfor %}
+					</tbody>
+				</table>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+
+	<!-- Add New Test Start -->
+
+	<script type="text/javascript">
+		$(document).ready(function () {
+			$('#draftTable').DataTable({
+    			responsive: true,
+				scroll: true
+			});
+		});
+		$(document).ready(function () {
+			$('#approvedTable').DataTable({
+    			responsive: true,
+				scroll: true
+			});
+		});
+	</script>
+	<!-- Add New Test End -->
+
+	<script src="https://code.jquery.com/jquery-3.5.1.js"crossorigin="anonymous"></script>
+	<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"crossorigin="anonymous"></script>
+	<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
+        crossorigin="anonymous"></script>
+	{% else %}
+	<div class="m-3">
+		<h2>Wrong Username or Password</h2>
+		<a href="/" onload="this.click()"><h3>Log In Again</h3></a>
+	</div>
+	{% endif %}
+</body>
+
+</html>
